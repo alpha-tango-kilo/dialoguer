@@ -112,6 +112,13 @@ impl<T> Input<'_, T> {
         self.show_default = val;
         self
     }
+
+    fn input_is_initial(&self, input: &str) -> bool {
+        self.initial_text
+            .as_ref()
+            .map(|it| it == input)
+            .unwrap_or_default()
+    }
 }
 
 impl<'a, T> Input<'a, T> {
@@ -404,7 +411,7 @@ where
             term.clear_line()?;
             render.clear()?;
 
-            if chars.is_empty() {
+            if chars.is_empty() || self.input_is_initial(&input) {
                 if let Some(ref default) = self.default {
                     if let Some(ref mut validator) = self.validator {
                         if let Some(err) = validator(default) {
@@ -418,9 +425,10 @@ where
                     }
                     term.flush()?;
                     return Ok(default.clone());
-                } else if !self.permit_empty {
-                    continue;
                 }
+            }
+            if chars.is_empty() && !self.permit_empty {
+                continue;
             }
 
             match input.parse::<T>() {
@@ -497,7 +505,7 @@ where
             term.clear_line()?;
             render.clear()?;
 
-            if input.is_empty() {
+            if input.is_empty() || self.input_is_initial(&input) {
                 if let Some(ref default) = self.default {
                     if let Some(ref mut validator) = self.validator {
                         if let Some(err) = validator(default) {
@@ -511,9 +519,10 @@ where
                     }
                     term.flush()?;
                     return Ok(default.clone());
-                } else if !self.permit_empty {
-                    continue;
                 }
+            }
+            if input.is_empty() && !self.permit_empty {
+                continue;
             }
 
             match input.parse::<T>() {
